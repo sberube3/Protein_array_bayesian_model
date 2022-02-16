@@ -1,31 +1,8 @@
 
 library(R2jags)
-library(runjags)
-library(MCMCpack)
-library(rjags)
-library(coda)
-library(bayesplot)
-library(distr)
-library(mcmcplots)
 library(dplyr)
-library(tidyr)
-
-#############################
-#Function to get posteriors
-############################
 
 
-get_posteriors<- function(model, data_list, updating_params,r){
-  model_1 <-textConnection(model)
-  model_initial<- jags.model(model_1,data=data_list, n.chains=3,
-                                               n.adapt=1000,quiet=FALSE)
-  
-  update(model_initial,5000)
-  
-  model_coda_r <- coda.samples(model_initial,updating_params,n.iter=10000)
-  
-  return(model_coda_r)
-}
 
 ####################
 #Constants and Data
@@ -275,7 +252,7 @@ S[k]~dnorm(mu_s,sigma_s)
 mu_s~dunif(-10^2,10^2)
 
 sigma_s=1/(tau_s*tau_s)
-tau_s~dunif(0,10^6)
+tau_s~dunif(0,10^3)
 sigma~dunif(0,10^3)
 }
 "
@@ -300,7 +277,7 @@ S[k]~dnorm(mu_s,sigma_s)
 mu_s~dunif(-10^2,10^2)
 
 sigma_s=1/(tau_s*tau_s)
-tau_s~dunif(0,10^6)
+tau_s~dunif(0,10^3)
 sigma~dunif(0,10^3)
 }
 "
@@ -324,10 +301,28 @@ S[k]~dnorm(mu_s,sigma_s)
 mu_s~dunif(-10^2,10^2)
 
 sigma_s=1/(tau_s*tau_s)
-tau_s~dunif(0,10^6)
+tau_s~dunif(0,10^3)
 
 }
 "
+
+
+#############################
+#Function to get posteriors
+############################
+
+
+get_posteriors<- function(model, data_list, updating_params,r){
+  model_1 <-textConnection(model)
+  model_initial<- jags.model(model_1,data=data_list, n.chains=3,
+                             n.adapt=1000,quiet=FALSE)
+  
+  update(model_initial,5000)
+  
+  model_coda_r <- coda.samples(model_initial,updating_params,n.iter=10000)
+  
+  return(model_coda_r)
+}
 
 
 ################################
@@ -360,7 +355,7 @@ get_percentile_residuals_huprot<- function(posterior, r, df_rY){
 ##################
 
 #alpha=2.5
-for(p in c(133,233,333,433)){
+for(p in 1:503){
   malaria_mcmc_data_p_alpha25<- get_malaria_data_list_alpha25(r=p,Y=std_ratio_matrix_M[,p+1],type=type_1_M,
                                                       beta=beta_cons,c=c_alpha,I=1156,K=1055,ones = ones)
   malaria_posteriors_p_alpha25<- get_posteriors(model = model_alpha_25,
@@ -381,7 +376,7 @@ for(p in c(133,233,333,433)){
 
 #alpha=1
 
-for(p in c(133,233,333,433)){
+for(p in 1:503){
   malaria_mcmc_data_p_alpha1<- get_malaria_data_list_alpha1(r=p,Y=std_ratio_matrix_M[,p+1],
                                                             type=type_1_M,I=1156,K=1055)
   malaria_posteriors_p_alpha1<- get_posteriors(model = model_alpha_1,
@@ -402,7 +397,7 @@ for(p in c(133,233,333,433)){
 
 #hatSigma
 
-for(p in c(133,233,333,433)){
+for(p in 1:503){
   malaria_mcmc_data_p_hatSigma<- get_malaria_data_list_hatSigma(r=p,Y=std_ratio_matrix_M[,p+1],
                                                             type=type_1_M,I=1156,K=1055,sigma = global_sd_M$x[p])
   malaria_posteriors_p_hatSigma<- get_posteriors(model = model_hatSigma,
@@ -466,7 +461,7 @@ get_percentile_residuals_huprot<- function(posterior, r, df_rY){
 write.csv(percentile_residuals_r_transformed,"HuProt_Percentiles_Array_43_alpha1.csv")
 
 
-for(p in c(57)){
+for(p in c(3,23,43,57,81)){
   huprot_mcmc_data_p_alpha1<- get_huprot_data_list_alpha1(r=p,Y=std_ratio_matrix_H[,p+1],
                                                             type=type_1_H,I=I_h,K=K_h)
   huprot_posteriors_p_alpha1<- get_posteriors(model = model_alpha_1,
@@ -487,7 +482,7 @@ for(p in c(57)){
 
 #hatSigma
 
-for(p in 1:100){
+for(p in c(3,23,43,57,83)){
   huprot_mcmc_data_p_hatSigma<- get_huprot_data_list_hatSigma(r=p,Y=std_ratio_matrix_H[,p+1],
                                                                 type=type_1_H,I=I_h,K=K_h,sigma = global_sd_H$x[p])
   huprot_posteriors_p_hatSigma<- get_posteriors(model = model_hatSigma,
